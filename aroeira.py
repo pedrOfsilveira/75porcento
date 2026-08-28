@@ -1114,6 +1114,10 @@ class Imagem:
     caminho  : caminho para o arquivo de imagem (png, jpg...)
     largura  : largura em pixels   (padrão: automático)
     altura   : altura em pixels    (padrão: automático)
+
+    Use um caminho relativo à pasta de trabalho do programa. No modo web, o arquivo
+    também precisa estar dentro da pasta servida por `Tela.executar()` (por
+    padrão, a pasta do programa).
     """
 
     def __init__(self, origem, caminho, largura=None, altura=None):
@@ -1343,11 +1347,11 @@ class Tela:
 
     Exemplo de uso
     --------------
-        from aroeira import Tela, Circulo, Botao
+        from aroeira import Tela, Ponto, Circulo, Botao
 
         tela = Tela("Meu Programa", 800, 600)
 
-        circulo = Circulo(x=200, y=150, raio=60, cor="vermelho")
+        circulo = Circulo(centro=Ponto(200, 150), raio=60, cor="vermelho")
         tela.adicionar(circulo)
 
         def ao_clicar():
@@ -1426,7 +1430,10 @@ class Tela:
         """
         Adiciona um elemento à tela.
 
-        Aceita: Circulo, Retangulo, Linha, Texto, Botao, Campo, Imagem
+        Aceita: Circulo, Retangulo, Linha, Texto, Botao, Campo, Imagem.
+        A ordem das chamadas define a ordem de desenho: elementos adicionados
+        depois ficam por cima dos anteriores. Normalmente, todos os elementos
+        são adicionados antes de chamar `executar()`.
         """
         if isinstance(elemento, _ElementoCanvas):
             elemento._tela = self
@@ -1484,6 +1491,17 @@ class Tela:
         """
         Define uma função chamada repetidamente para criar animações.
 
+        A função não recebe argumentos e é chamada aproximadamente `fps`
+        vezes por segundo enquanto a tela estiver aberta. O valor de `fps`
+        deve ser positivo. A Aroeira não fornece delta time: uma chamada a
+        `mover(dx=2)` significa 2 pixels por frame, e não 2 pixels por
+        segundo. Para movimento previsível, escolha um `fps` fixo e ajuste o
+        deslocamento por frame de acordo com a velocidade desejada.
+
+        Registre a animação antes de `executar()`. Durante cada frame, várias
+        alterações de elementos são agrupadas e a tela é redesenhada uma vez.
+        Isso permite mover vários objetos sem chamar `update()` manualmente.
+
         Parâmetros
         ----------
         funcao : função sem parâmetros chamada a cada frame
@@ -1508,14 +1526,23 @@ class Tela:
         """
         Define função chamada quando uma tecla é pressionada.
 
-        A função recebe o nome da tecla como parâmetro (string).
+        A função recebe o nome legível da tecla como parâmetro (string), por
+        exemplo `"Arrow Left"`, `"Enter"` ou uma letra como `"W"`. O valor
+        depende do rótulo enviado pelo Flet; ao comparar letras, use
+        `nome.upper()` ou `nome.casefold()` se quiser ignorar maiúsculas e
+        minúsculas.
+
+        Este evento representa uma pressão. Ele pode ser repetido pelo sistema
+        operacional enquanto a tecla permanece pressionada, mas isso não é uma
+        boa base para movimento contínuo. Para esse caso, guarde o estado no
+        pressionar/soltar e atualize a posição com `animar()`.
 
         Exemplo
         -------
             def tecla(nome):
-                if nome == "Arrow Left":
+                if nome.casefold() == "arrow left":
                     nave.mover(dx=-5, dy=0)
-                elif nome == "Arrow Right":
+                elif nome.casefold() == "arrow right":
                     nave.mover(dx=5, dy=0)
 
             tela.ao_pressionar_tecla(tecla)
@@ -1523,7 +1550,7 @@ class Tela:
         Teclas comuns
         -------------
             Setas     : "Arrow Left", "Arrow Right", "Arrow Up", "Arrow Down"
-            Letras    : "a", "b", "c" ...
+            Letras    : por exemplo, "A", "B", "C" ...
             Espaço    : " "
             Enter     : "Enter"
             Escape    : "Escape"
@@ -1534,8 +1561,30 @@ class Tela:
         """Define a função chamada quando uma tecla é solta.
 
         A função recebe o nome da tecla como parâmetro (string). Este evento
-        permite implementar controles contínuos: o pressionar liga uma
-        intenção de movimento e o soltar desliga essa intenção.
+        deve ser combinado com `ao_pressionar_tecla()` e `animar()` para
+        implementar controles contínuos: o pressionar liga uma intenção de
+        movimento e o soltar desliga essa intenção. A função de animação é a
+        responsável por mover o objeto em cada frame.
+
+        Exemplo de estrutura
+        --------------------
+            pressionadas = set()
+
+            def pressionar(nome):
+                pressionadas.add(nome.casefold())
+
+            def soltar(nome):
+                pressionadas.discard(nome.casefold())
+
+            def atualizar():
+                if "arrow left" in pressionadas:
+                    nave.mover(dx=-5)
+                if "arrow right" in pressionadas:
+                    nave.mover(dx=5)
+
+            tela.ao_pressionar_tecla(pressionar)
+            tela.ao_soltar_tecla(soltar)
+            tela.animar(atualizar, fps=60)
         """
         self._funcao_soltar_teclado = funcao
 
@@ -1545,6 +1594,10 @@ class Tela:
     def mostrar_dialogo(self, caixa):
         """
         Exibe uma CaixaDeDialogo na tela.
+
+        Deve ser chamado depois de `executar()`, normalmente dentro de um
+        evento de clique ou teclado. A caixa é modal e só desaparece quando o
+        usuário confirma uma das opções.
 
         Parâmetros
         ----------
@@ -1722,6 +1775,11 @@ class Tela:
     def executar(self, web=False):
         """Abre a janela e inicia a aplicação. Deve ser a última chamada.
 
+        A chamada fica bloqueada enquanto a aplicação estiver aberta; código
+        que precise reagir a eventos deve ser registrado antes, por meio de
+        `ao_clicar()`, `ao_pressionar_tecla()`, `ao_soltar_tecla()` ou
+        `animar()`.
+
         web : True para rodar no navegador (padrão: False).
               Quando True, exibe no terminal a URL para acesso
               pelo celular (mesma rede WiFi).
@@ -1842,15 +1900,26 @@ class Tela:
 
     @property
     def animando(self):
+        """Indica se a animação está marcada para continuar (`True`/`False`)."""
         return self._segue
 
     def reanimar(self):
+        """Retoma a animação depois de `parar_animacao()`.
+
+        Só inicia um novo loop se a tela já estiver aberta e uma função tiver
+        sido registrada com `animar()`.
+        """
         if not self._segue and self._paginas and not self._loop_iniciado:
             self._segue = True
             self._loop_iniciado = True
             self._paginas[-1].run_task(self._loop_animacao)
 
     def parar_animacao(self):
+        """Interrompe a animação sem fechar a janela.
+
+        Os elementos permanecem na posição atual. Use `reanimar()` para
+        retomar o loop.
+        """
         self._segue = False
 
     def _redesenhar(self):
