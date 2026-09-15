@@ -2,12 +2,16 @@ import aroeira as ar
 import mapa
 import player as pl
 
-velocidade = 40
+velocidade = 5
 
 tela = ar.Tela("Roguelike", 15*50, 9*50)
 
+
 mapa.drawRoom(mapa.roomLayout, tela)
 player = pl.Player()
+
+vidas = ar.Texto(ar.Ponto(50,50),f"Vidas: {player.health}", 16, 'preto')
+tela.adicionar(vidas)
 
 def colisao():
     for pixel in mapa.renderizado:
@@ -20,6 +24,10 @@ teclas = set()
 def pressionar(nome):
     teclas.add(nome.casefold())
 
+    #Teste do dano
+    if nome == "F":
+        player.dano(vidas)
+
 def soltar(nome):
     teclas.discard(nome.casefold())
 
@@ -28,25 +36,26 @@ def atualizar():
         player.shape.mover(dy=-velocidade)
         sit, bloco = colisao()
         if sit == True:
-            player.shape.mover(dy=(bloco.shape.y + 50) - player.shape.y)
+            player.shape.mover(dy=(bloco.shape.y + bloco.shape.altura) - player.shape.y)
     if "s" in teclas:
         player.shape.mover(dy=velocidade)
         sit, bloco = colisao()
         if sit == True:
-            player.shape.mover(dy=(bloco.shape.y - 25) - player.shape.y)
+            player.shape.mover(dy=(bloco.shape.y - player.shape.altura) - player.shape.y)
     if "a" in teclas:
         player.shape.mover(dx=-velocidade)
         sit, bloco = colisao()
         if sit == True:
-            player.shape.mover(dx=(bloco.shape.x + 50) - player.shape.x)   
+            player.shape.mover(dx=(bloco.shape.x + bloco.shape.largura) - player.shape.x)   
     if "d" in teclas:
         player.shape.mover(dx=velocidade)
         sit, bloco = colisao()
         if sit == True:
-            player.shape.mover(dx=(bloco.shape.x - 25) - player.shape.x)
-    print(player.shape.origem)
+            player.shape.mover(dx=(bloco.shape.x - player.shape.largura) - player.shape.x)
 
-#VER A COLISÃO COM O PEDRO, QUANDO MUITO A VELOCIDADE ESTÁ MUITO ALTA O PERSONAGEM FICA ALGUNS PIXEIS DE DISTÂNCIA DA PAREDE
+    if player.invenc != 0:
+        player.invenc -= 1
+
 
 tela.adicionar(player.shape)
 tela.ao_pressionar_tecla(pressionar)
