@@ -3,7 +3,7 @@ import mapa
 class Player():
    
     def __init__(self):
-        self.shape = ar.Retangulo(origem= ar.Ponto(x= 7 * 50, y= 0), largura=25, altura=25, cor="roxo")
+        self.shape = ar.Retangulo(origem= ar.Ponto(x= 7 * 50, y= 50), largura=25, altura=25, cor="roxo")
         self.health = 3
         self.invenc = 80
 
