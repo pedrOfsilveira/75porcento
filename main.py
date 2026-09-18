@@ -35,17 +35,47 @@ def pressionar(nome):
 def soltar(nome):
     teclas.discard(nome.casefold())
 
+
+#Lida com a porta e os espinhos por enquanto
+def blocos_extras():
+    playery = player.shape.y
+    playerx = player.shape.x
+    playerlargura = player.shape.largura
+    playeraltura = player.shape.altura
+
+    for extras in mapa.extras:
+        if extras.tipo == 3:
+            if (playerx < extras.shape.x + extras.shape.largura and playerx + playerlargura > extras.shape.x) and (playery < extras.shape.y + extras.shape.altura and playery + playeraltura > extras.shape.y):
+
+                player.dano(vidas)
+        
+        if extras.tipo == 4:
+            if (playerx < extras.shape.x + extras.shape.largura and playerx + playerlargura > extras.shape.x) and (playery < extras.shape.y + extras.shape.altura and playery + playeraltura > extras.shape.y):
+
+                if extras.shape.y <= 50 :
+                    mapa.change_room('cima',tela, player)
+                    player.shape.y = 374
+
+                if extras.shape.y >= 400:
+                    mapa.change_room('baixo',tela, player)
+                    player.shape.y = 51
+
+                if extras.shape.x <= 50:
+                    mapa.change_room('esquerda',tela, player)
+                    player.shape.x = 674
+
+                if extras.shape.x > 650:
+                    mapa.change_room('direita',tela, player)
+                    player.shape.x = 51
+
+
 def atualizar():
+    blocos_extras()
     if "w" in teclas:
         player.shape.mover(dy=-velocidade)
         sit, bloco = colisao()
         if sit == True:
             player.shape.mover(dy=(bloco.shape.y + bloco.shape.altura) - player.shape.y)
-
-        if sit == True and bloco.tipo == 4:
-            if bloco.shape.y <= 50 :
-                mapa.change_room('cima',tela, player)
-                player.shape.y = 375
 
     if "s" in teclas:
         player.shape.mover(dy=velocidade)
@@ -53,10 +83,6 @@ def atualizar():
         if sit == True:
             player.shape.mover(dy=(bloco.shape.y - player.shape.altura) - player.shape.y)
 
-        if sit == True and bloco.tipo == 4:
-            if bloco.shape.y >= 400:
-                mapa.change_room('baixo',tela, player)
-                player.shape.y = 50
 
     if "a" in teclas:
         player.shape.mover(dx=-velocidade)
@@ -64,21 +90,12 @@ def atualizar():
         if sit == True:
             player.shape.mover(dx=(bloco.shape.x + bloco.shape.largura) - player.shape.x)
 
-        if sit == True and bloco.tipo == 4:
-            if bloco.shape.x <= 50:
-                mapa.change_room('esquerda',tela, player)
-                player.shape.x = 675
                 
     if "d" in teclas:
         player.shape.mover(dx=velocidade)
         sit, bloco = colisao()
         if sit == True:
-            player.shape.mover(dx=(bloco.shape.x - player.shape.largura) - player.shape.x)
-
-        if sit == True and bloco.tipo == 4:
-            if bloco.shape.x > 650:
-                mapa.change_room('direita',tela, player)
-                player.shape.x = 50
+            player.shape.mover(dx=(bloco.shape.x - player.shape.largura) - player.shape.x)    
 
     if player.invenc != 0:
         player.invenc -= 1
