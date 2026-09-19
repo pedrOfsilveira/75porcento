@@ -1,141 +1,100 @@
-import aroeira as ar
 import random as rd
-import player as p1
 
-class Pixel:
-    def __init__(self, origem: ar.Ponto, cor: str, colisao: bool, tipo):
-        self.shape: ar.Retangulo = ar.Retangulo(
-            altura= 50, 
-            largura= 50,
-            origem= origem,
-            cor= cor
-        )
-        self.colisao = colisao
-        self.tipo = tipo
+import aroeira as ar
+import config
+from salas import ROOM_LAYOUTS
+from tile import Tile
 
-roomLayout = [[
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-    [1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-],[
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 2, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
-    [4, 0, 0, 0, 0, 2, 3, 3, 3, 2, 0, 0, 0, 0, 4],
-    [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-],[
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [4, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 4],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-],[
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
-    [4, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 4],
-    [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1],
-    [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1],
-]]
-
-extras: list[Pixel] = []
-renderizado: list[Pixel] = []
-salas = {}
+# ESTADO DA SALA ATUAL (troquei pixel por tile e renderizado por solido)
+solidos: list[Tile] = []  # qualquer coisa com colisao
+extras: list[Tile] = []  # sem colisao
+salas: dict = {}
 colunas = 0
 linhas = 0
 
-def drawRoom(roomMatrix, tela):
-    global renderizado, extras
-    renderizado = []
+
+def chave_sala():
+    return f"{colunas},{linhas}"
+
+
+def desenhar_sala(matriz, tela):
+    global solidos, extras
+    solidos = []
     extras = []
-    for i, linha in enumerate(roomMatrix):
+
+    for linha_i, linha in enumerate(matriz):
         for col, tipo in enumerate(linha):
-            if tipo == 0:
+            if tipo == config.CHAO:
                 continue
 
-            cores = {
-                1: "marrom",
-                2: "vermelho",
-                3: "cinza",
-                4: "verde",
-                5: "azul",  
-            }
-            colisao = {
-                1: True,
-                2: True,
-                3: False,
-                4: False,
-                5: False,
-            }
-
-            pixel = Pixel(
-                origem=ar.Ponto(col * 50, i * 50),
-                cor=cores[tipo],
-                colisao=colisao[tipo],
-                tipo=tipo
+            tile = Tile(
+                origem=ar.Ponto(col * config.TILE, linha_i * config.TILE),
+                cor=config.CORES[tipo],
+                colisao=config.TEM_COLISAO[tipo],
+                tipo=tipo,
             )
 
-            if pixel.colisao:
-                renderizado.append(pixel)
-
+            if tile.colisao:
+                solidos.append(tile)
             else:
-                extras.append(pixel)
+                extras.append(tile)
 
-            tela.adicionar(pixel.shape)
-    salas[f"{colunas},{linhas}"] = renderizado, extras
+            tela.adicionar(tile.shape)
 
-def change_room(dir, tela, player):
-    global colunas, linhas, renderizado, extras
-    remove_map(tela, player)
-    if dir == "cima":
+    salas[chave_sala()] = (solidos, extras)
+
+
+def sala_aleatoria(tela):
+    indice = rd.randint(0, len(ROOM_LAYOUTS) - 1)
+    desenhar_sala(ROOM_LAYOUTS[indice], tela)
+
+
+def remover_mapa(tela, player):
+    tela.remover(player.shape)
+    for tile in solidos:
+        tela.remover(tile.shape)
+    for tile in extras:
+        tela.remover(tile.shape)
+
+
+def _mostrar_sala_atual(tela):
+    for tile in solidos:
+        tela.adicionar(tile.shape)
+    for tile in extras:
+        tela.adicionar(tile.shape)
+
+
+def trocar_sala(direcao, tela, player):
+    global colunas, linhas, solidos, extras
+
+    remover_mapa(tela, player)
+
+    if direcao == "cima":
         linhas -= 1
-    if dir == "baixo":
+    elif direcao == "baixo":
         linhas += 1
-    if dir == "direita":
+    elif direcao == "direita":
         colunas += 1
-    if dir == "esquerda":
+    elif direcao == "esquerda":
         colunas -= 1
-          
-    if f"{colunas},{linhas}" in salas:
 
-        renderizado = salas[f"{colunas},{linhas}"][0]
-        extras = salas[f"{colunas},{linhas}"][1]
-        for i in range(len(renderizado)):
-            tela.adicionar(renderizado[i].shape)
-
-        for b in range(len(extras)):
-            tela.adicionar(extras[b].shape)
-
+    chave = chave_sala()
+    if chave in salas:
+        solidos, extras = salas[chave]
+        _mostrar_sala_atual(tela)
     else:
-        aleatorio = rd.randint(0,len(roomLayout)- 1)
-        drawRoom(roomLayout[aleatorio], tela)
+        sala_aleatoria(tela)
+
     tela.adicionar(player.shape)
 
-def remove_map(tela, player):
-    global renderizado, extras
-    tela.remover(player.shape)
-    for i in range(len(renderizado)):
-        tela.remover(renderizado[i].shape)
 
-    if len(extras) == 1:
-        tela.remover(extras[0].shape)
-    else:
-        for b in range(len(extras)):
-            tela.remover(extras[b].shape)
+def direcao_da_porta(tile: Tile) -> str | None:
+    if tile.shape.y <= config.TILE:
+        return "cima"
+    if tile.shape.y >= config.ALTURA_TELA - config.TILE:
+        return "baixo"
+    if tile.shape.x <= config.TILE:
+        return "esquerda"
+    if tile.shape.x >= config.LARGURA_TELA - config.TILE:
+        return "direita"
+    return None

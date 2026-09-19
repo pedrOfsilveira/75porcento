@@ -93,34 +93,40 @@ import asyncio
 import os
 import sys
 import threading
+import time as _time
 import traceback
+
 import flet as ft
 import flet.canvas  # necessário para que ft.canvas funcione no Flet 0.83+
-import time as _time
 
 # ------------------------------------------------------------
 #  Tabela de cores em português
 # ------------------------------------------------------------
 _CORES = {
-    "vermelho":     "#E53935",
-    "verde":        "#43A047",
-    "azul":         "#1E88E5",
-    "amarelo":      "#FDD835",
-    "laranja":      "#FB8C00",
-    "roxo":         "#8E24AA",
-    "rosa":         "#E91E63",
-    "ciano":        "#00ACC1",
-    "marrom":       "#6D4C41",
-    "cinza":        "#757575",
-    "cinza_claro":  "#E0E0E0",
-    "branco":       "#FFFFFF",
-    "preto":        "#000000",
+    "vermelho": "#E53935",
+    "verde": "#43A047",
+    "azul": "#1E88E5",
+    "amarelo": "#FDD835",
+    "laranja": "#FB8C00",
+    "roxo": "#8E24AA",
+    "rosa": "#E91E63",
+    "ciano": "#00ACC1",
+    "marrom": "#6D4C41",
+    "cinza": "#757575",
+    "cinza_claro": "#E0E0E0",
+    "branco": "#FFFFFF",
+    "preto": "#000000",
     "transparente": "transparent",
 }
 
+
 def _liberar_porta(porta):
     """Encerra qualquer processo do próprio usuário que esteja ocupando a porta."""
-    import signal, subprocess, os, time
+    import os
+    import signal
+    import subprocess
+    import time
+
     try:
         resultado = subprocess.run(["ss", "-tlnpH"], capture_output=True, text=True)
         for linha in resultado.stdout.splitlines():
@@ -152,8 +158,8 @@ def _pedir_redesenho(controle):
         RuntimeError: Text(8) Control must be added to the page first
 
     Achei que não ficaria inútil para o pessoal do 1o ano aprendendo e acaba sendo um
-    alarme falso: o valor novo já ficou guardado no próprio controle, 
-    então ele nasce correto assim que a tela abrir. 
+    alarme falso: o valor novo já ficou guardado no próprio controle,
+    então ele nasce correto assim que a tela abrir.
     Só o pedido de redesenho é que não faz sentido ainda.
 
     A checagem é um try/except porque a propriedade `page` do Flet LEVANTA erro
@@ -162,7 +168,7 @@ def _pedir_redesenho(controle):
     """
     try:
         montado = controle.page is not None
-    except RuntimeError: #silenciei a exceção, como expliquei ali em cima
+    except RuntimeError:  # silenciei a exceção, como expliquei ali em cima
         return
     if montado:
         controle.update()
@@ -232,25 +238,18 @@ _ARQUIVO_DA_LIB = os.path.abspath(__file__)
 # de "exceções didáticas": para acrescentar um caso novo basta uma
 # entrada aqui, sem tocar em mais nada.
 _DICAS_DE_ERRO = {
-    "NameError":
-        "Python não conhece esse nome. Veja se você digitou certo e se a\n"
-        "        variável (ou função) foi criada ANTES de ser usada aqui.",
-    "AttributeError":
-        "Você pediu algo que esse objeto não tem. Confira o nome e o tipo:\n"
-        "        um Ponto tem .x e .y; uma tupla (10, 20) não tem.",
-    "TypeError":
-        "Os tipos não combinam, ou a função recebeu um número de argumentos\n"
-        "        diferente do esperado. Cuidado ao misturar texto com número.",
-    "IndexError":
-        "Você acessou uma posição que não existe na lista. A primeira é 0 e\n"
-        "        a última é len(lista) - 1.",
-    "KeyError":
-        "Essa chave não existe no dicionário. Confira a grafia da chave.",
-    "ZeroDivisionError":
-        "Houve uma divisão por zero. Teste o divisor antes de dividir.",
-    "ValueError":
-        "O valor tem o tipo certo, mas não serve. É comum ao converter texto\n"
-        "        em número: int(\"abc\") não funciona.",
+    "NameError": "Python não conhece esse nome. Veja se você digitou certo e se a\n"
+    "        variável (ou função) foi criada ANTES de ser usada aqui.",
+    "AttributeError": "Você pediu algo que esse objeto não tem. Confira o nome e o tipo:\n"
+    "        um Ponto tem .x e .y; uma tupla (10, 20) não tem.",
+    "TypeError": "Os tipos não combinam, ou a função recebeu um número de argumentos\n"
+    "        diferente do esperado. Cuidado ao misturar texto com número.",
+    "IndexError": "Você acessou uma posição que não existe na lista. A primeira é 0 e\n"
+    "        a última é len(lista) - 1.",
+    "KeyError": "Essa chave não existe no dicionário. Confira a grafia da chave.",
+    "ZeroDivisionError": "Houve uma divisão por zero. Teste o divisor antes de dividir.",
+    "ValueError": "O valor tem o tipo certo, mas não serve. É comum ao converter texto\n"
+    '        em número: int("abc") não funciona.',
 }
 
 # Observadores plugáveis: cada um é uma função que recebe um dicionário
@@ -281,9 +280,11 @@ def _linhas_do_aluno(erro):
 
     def eh_de_biblioteca(frame):
         caminho = os.path.abspath(frame.filename)
-        return (caminho == _ARQUIVO_DA_LIB
-                or "site-packages" in caminho
-                or "dist-packages" in caminho)
+        return (
+            caminho == _ARQUIVO_DA_LIB
+            or "site-packages" in caminho
+            or "dist-packages" in caminho
+        )
 
     proprios = [f for f in frames if not eh_de_biblioteca(f)]
     # Se não sobrou nada, o erro aconteceu inteiro dentro de uma biblioteca.
@@ -294,18 +295,22 @@ def _linhas_do_aluno(erro):
 def _formatar_erro(erro, titulo, consequencia):
     """Monta o texto do relato — sem cores ANSI, para não sujar redirecionamentos."""
     barra = "=" * 68
-    linhas = ["", barra, "  " + titulo, barra,
-              "  %s: %s" % (type(erro).__name__, erro)]
+    linhas = ["", barra, "  " + titulo, barra, "  %s: %s" % (type(erro).__name__, erro)]
 
     quadros = _linhas_do_aluno(erro)
     if quadros:
         linhas.append("")
         linhas.append("  No seu programa:")
         for quadro in quadros:
-            onde = ("no corpo do programa" if quadro.name == "<module>"
-                    else "dentro de %s()" % quadro.name)
-            linhas.append("    %s, linha %d, %s"
-                          % (os.path.basename(quadro.filename), quadro.lineno, onde))
+            onde = (
+                "no corpo do programa"
+                if quadro.name == "<module>"
+                else "dentro de %s()" % quadro.name
+            )
+            linhas.append(
+                "    %s, linha %d, %s"
+                % (os.path.basename(quadro.filename), quadro.lineno, onde)
+            )
             if quadro.line:
                 linhas.append("        %s" % quadro.line.strip())
 
@@ -331,10 +336,12 @@ def _relatar_erro_do_aluno(erro, titulo, consequencia=""):
 
     # A chave inclui a linha: dois erros iguais em lugares diferentes do
     # programa são coisas diferentes e ambos merecem ser mostrados.
-    chave = (type(erro).__name__,
-             ultimo.filename if ultimo else "",
-             ultimo.lineno if ultimo else 0,
-             titulo)
+    chave = (
+        type(erro).__name__,
+        ultimo.filename if ultimo else "",
+        ultimo.lineno if ultimo else 0,
+        titulo,
+    )
     vezes = _erros_ja_relatados.get(chave, 0) + 1
     _erros_ja_relatados[chave] = vezes
 
@@ -431,9 +438,9 @@ class _ElementoCanvas:
     """Base para formas geométricas desenhadas no Canvas."""
 
     def __init__(self):
-        self._shape = None        # objeto ft.canvas.* — preenchimento
+        self._shape = None  # objeto ft.canvas.* — preenchimento
         self._shape_borda = None  # objeto ft.canvas.* — contorno (opcional)
-        self._tela = None         # referência à Tela após adicionar()
+        self._tela = None  # referência à Tela após adicionar()
         self._visivel = True
 
     @property
@@ -477,8 +484,7 @@ class _ElementoCanvas:
         """
         if espessura < 0:
             raise ValueError(
-                "espessura_borda não pode ser negativa "
-                f"(recebido: {espessura})"
+                f"espessura_borda não pode ser negativa (recebido: {espessura})"
             )
         if borda is None and espessura == 0:
             return None, 0
@@ -546,8 +552,7 @@ class Circulo(_ElementoCanvas):
         bola.espessura_borda = 0    # tira a borda
     """
 
-    def __init__(self, centro=None, raio=50,
-                 cor="azul", borda=None, espessura_borda=0):
+    def __init__(self, centro=None, raio=50, cor="azul", borda=None, espessura_borda=0):
         super().__init__()
         self._centro = centro if centro is not None else Ponto(100, 100)
         self._raio = raio
@@ -562,8 +567,7 @@ class Circulo(_ElementoCanvas):
             style=ft.PaintingStyle.FILL,
         )
         return ft.canvas.Circle(
-            x=self._centro.x, y=self._centro.y,
-            radius=self._raio, paint=paint
+            x=self._centro.x, y=self._centro.y, radius=self._raio, paint=paint
         )
 
     def _criar_shape_borda(self):
@@ -573,8 +577,7 @@ class Circulo(_ElementoCanvas):
             style=ft.PaintingStyle.STROKE,
         )
         return ft.canvas.Circle(
-            x=self._centro.x, y=self._centro.y,
-            radius=self._raio, paint=paint
+            x=self._centro.x, y=self._centro.y, radius=self._raio, paint=paint
         )
 
     def _sincronizar_geometria(self):
@@ -585,7 +588,9 @@ class Circulo(_ElementoCanvas):
             shape.radius = self._raio
 
     @property
-    def centro(self): return self._centro
+    def centro(self):
+        return self._centro
+
     @centro.setter
     def centro(self, ponto):
         self._centro = ponto
@@ -593,7 +598,9 @@ class Circulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def x(self): return self._centro.x
+    def x(self):
+        return self._centro.x
+
     @x.setter
     def x(self, valor):
         self._centro.x = valor
@@ -601,7 +608,9 @@ class Circulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def y(self): return self._centro.y
+    def y(self):
+        return self._centro.y
+
     @y.setter
     def y(self, valor):
         self._centro.y = valor
@@ -609,7 +618,9 @@ class Circulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def raio(self): return self._raio
+    def raio(self):
+        return self._raio
+
     @raio.setter
     def raio(self, valor):
         self._raio = valor
@@ -617,7 +628,9 @@ class Circulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def cor(self): return self._cor
+    def cor(self):
+        return self._cor
+
     @cor.setter
     def cor(self, valor):
         self._cor = valor
@@ -625,7 +638,9 @@ class Circulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def borda(self): return self._borda
+    def borda(self):
+        return self._borda
+
     @borda.setter
     def borda(self, valor):
         self._borda, self._espessura = self._resolver_borda(valor, self._espessura)
@@ -633,7 +648,9 @@ class Circulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def espessura_borda(self): return self._espessura
+    def espessura_borda(self):
+        return self._espessura
+
     @espessura_borda.setter
     def espessura_borda(self, valor):
         # Aqui o 0 é intencional (o aluno quer tirar a borda), então não
@@ -685,8 +702,15 @@ class Retangulo(_ElementoCanvas):
                             cor="transparente", borda="branco", espessura_borda=2)
     """
 
-    def __init__(self, origem=None, largura=150, altura=100,
-                 cor="verde", borda=None, espessura_borda=0):
+    def __init__(
+        self,
+        origem=None,
+        largura=150,
+        altura=100,
+        cor="verde",
+        borda=None,
+        espessura_borda=0,
+    ):
         super().__init__()
         self._origem = origem if origem is not None else Ponto(50, 50)
         self._largura = largura
@@ -702,9 +726,11 @@ class Retangulo(_ElementoCanvas):
             style=ft.PaintingStyle.FILL,
         )
         return ft.canvas.Rect(
-            x=self._origem.x, y=self._origem.y,
-            width=self._largura, height=self._altura,
-            paint=paint
+            x=self._origem.x,
+            y=self._origem.y,
+            width=self._largura,
+            height=self._altura,
+            paint=paint,
         )
 
     def _criar_shape_borda(self):
@@ -714,9 +740,11 @@ class Retangulo(_ElementoCanvas):
             style=ft.PaintingStyle.STROKE,
         )
         return ft.canvas.Rect(
-            x=self._origem.x, y=self._origem.y,
-            width=self._largura, height=self._altura,
-            paint=paint
+            x=self._origem.x,
+            y=self._origem.y,
+            width=self._largura,
+            height=self._altura,
+            paint=paint,
         )
 
     def _sincronizar_geometria(self):
@@ -728,7 +756,9 @@ class Retangulo(_ElementoCanvas):
             shape.height = self._altura
 
     @property
-    def origem(self): return self._origem
+    def origem(self):
+        return self._origem
+
     @origem.setter
     def origem(self, ponto):
         self._origem = ponto
@@ -736,7 +766,9 @@ class Retangulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def x(self): return self._origem.x
+    def x(self):
+        return self._origem.x
+
     @x.setter
     def x(self, valor):
         self._origem.x = valor
@@ -744,7 +776,9 @@ class Retangulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def y(self): return self._origem.y
+    def y(self):
+        return self._origem.y
+
     @y.setter
     def y(self, valor):
         self._origem.y = valor
@@ -752,7 +786,9 @@ class Retangulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def largura(self): return self._largura
+    def largura(self):
+        return self._largura
+
     @largura.setter
     def largura(self, valor):
         self._largura = valor
@@ -760,7 +796,9 @@ class Retangulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def altura(self): return self._altura
+    def altura(self):
+        return self._altura
+
     @altura.setter
     def altura(self, valor):
         self._altura = valor
@@ -768,7 +806,9 @@ class Retangulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def cor(self): return self._cor
+    def cor(self):
+        return self._cor
+
     @cor.setter
     def cor(self, valor):
         self._cor = valor
@@ -776,7 +816,9 @@ class Retangulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def borda(self): return self._borda
+    def borda(self):
+        return self._borda
+
     @borda.setter
     def borda(self, valor):
         self._borda, self._espessura = self._resolver_borda(valor, self._espessura)
@@ -784,7 +826,9 @@ class Retangulo(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def espessura_borda(self): return self._espessura
+    def espessura_borda(self):
+        return self._espessura
+
     @espessura_borda.setter
     def espessura_borda(self, valor):
         # Aqui o 0 é intencional (o aluno quer tirar a borda), então não
@@ -831,7 +875,7 @@ class Linha(_ElementoCanvas):
     def __init__(self, inicio=None, fim=None, cor="preto", espessura=2):
         super().__init__()
         self._inicio = inicio if inicio is not None else Ponto(0, 0)
-        self._fim    = fim    if fim    is not None else Ponto(100, 100)
+        self._fim = fim if fim is not None else Ponto(100, 100)
         self._cor = cor
         self._espessura = espessura
         self._shape = self._criar_shape()
@@ -843,13 +887,17 @@ class Linha(_ElementoCanvas):
             style=ft.PaintingStyle.STROKE,
         )
         return ft.canvas.Line(
-            x1=self._inicio.x, y1=self._inicio.y,
-            x2=self._fim.x,    y2=self._fim.y,
-            paint=paint
+            x1=self._inicio.x,
+            y1=self._inicio.y,
+            x2=self._fim.x,
+            y2=self._fim.y,
+            paint=paint,
         )
 
     @property
-    def inicio(self): return self._inicio
+    def inicio(self):
+        return self._inicio
+
     @inicio.setter
     def inicio(self, ponto):
         self._inicio = ponto
@@ -858,7 +906,9 @@ class Linha(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def fim(self): return self._fim
+    def fim(self):
+        return self._fim
+
     @fim.setter
     def fim(self, ponto):
         self._fim = ponto
@@ -867,7 +917,9 @@ class Linha(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def cor(self): return self._cor
+    def cor(self):
+        return self._cor
+
     @cor.setter
     def cor(self, valor):
         self._cor = valor
@@ -875,7 +927,9 @@ class Linha(_ElementoCanvas):
         self._atualizar()
 
     @property
-    def espessura(self): return self._espessura
+    def espessura(self):
+        return self._espessura
+
     @espessura.setter
     def espessura(self, valor):
         self._espessura = valor
@@ -886,8 +940,8 @@ class Linha(_ElementoCanvas):
         """Move a linha inteira dx pixels na horizontal e dy na vertical."""
         self._inicio.x += dx
         self._inicio.y += dy
-        self._fim.x    += dx
-        self._fim.y    += dy
+        self._fim.x += dx
+        self._fim.y += dy
         self._shape.x1 = self._inicio.x
         self._shape.y1 = self._inicio.y
         self._shape.x2 = self._fim.x
@@ -931,12 +985,16 @@ class Texto:
         # chegasse ao GestureDetector de ao_clicar. O Texto não trata clique algum,
         # então deixá-lo passar não custa nada.
         self._container = ft.Container(
-            left=origem.x, top=origem.y, content=self._controle,
+            left=origem.x,
+            top=origem.y,
+            content=self._controle,
             ignore_interactions=True,
         )
 
     @property
-    def origem(self): return self._origem
+    def origem(self):
+        return self._origem
+
     @origem.setter
     def origem(self, ponto):
         self._origem = ponto
@@ -945,7 +1003,9 @@ class Texto:
         _pedir_redesenho(self._container)
 
     @property
-    def conteudo(self): return self._conteudo
+    def conteudo(self):
+        return self._conteudo
+
     @conteudo.setter
     def conteudo(self, valor):
         self._conteudo = valor
@@ -953,7 +1013,9 @@ class Texto:
         _pedir_redesenho(self._controle)
 
     @property
-    def cor(self): return self._cor
+    def cor(self):
+        return self._cor
+
     @cor.setter
     def cor(self, valor):
         self._cor = valor
@@ -994,8 +1056,15 @@ class Botao:
     largura   : largura em pixels                        (padrão: automático)
     """
 
-    def __init__(self, origem, rotulo="Botão", ao_clicar=None,
-                 cor="azul", cor_texto="branco", largura=None):
+    def __init__(
+        self,
+        origem,
+        rotulo="Botão",
+        ao_clicar=None,
+        cor="azul",
+        cor_texto="branco",
+        largura=None,
+    ):
         self._origem = origem
         self._rotulo = rotulo
         self._ao_clicar = ao_clicar
@@ -1010,20 +1079,24 @@ class Botao:
         # Cuidado: passar bgcolor=/color= soltos aqui sobrescreveria este style.
         self._controle = ft.ElevatedButton(
             content=rotulo,
-            on_click=lambda e: _chamar_do_aluno(
-                ao_clicar,
-                titulo='Houve um erro na função do botão "%s".' % self._rotulo,
-                consequencia="O programa continua rodando. Este mesmo erro não será\n"
-                             "mostrado de novo até você executar o programa outra vez.",
-            ) if ao_clicar else None,
+            on_click=lambda e: (
+                _chamar_do_aluno(
+                    ao_clicar,
+                    titulo='Houve um erro na função do botão "%s".' % self._rotulo,
+                    consequencia="O programa continua rodando. Este mesmo erro não será\n"
+                    "mostrado de novo até você executar o programa outra vez.",
+                )
+                if ao_clicar
+                else None
+            ),
             style=ft.ButtonStyle(
                 bgcolor={
                     ft.ControlState.DISABLED: _resolver_cor("cinza_claro"),
-                    ft.ControlState.DEFAULT:  _resolver_cor(cor),
+                    ft.ControlState.DEFAULT: _resolver_cor(cor),
                 },
                 color={
                     ft.ControlState.DISABLED: _resolver_cor("cinza"),
-                    ft.ControlState.DEFAULT:  _resolver_cor(cor_texto),
+                    ft.ControlState.DEFAULT: _resolver_cor(cor_texto),
                 },
             ),
             width=largura,
@@ -1033,7 +1106,9 @@ class Botao:
         )
 
     @property
-    def origem(self): return self._origem
+    def origem(self):
+        return self._origem
+
     @origem.setter
     def origem(self, ponto):
         self._origem = ponto
@@ -1042,7 +1117,9 @@ class Botao:
         _pedir_redesenho(self._container)
 
     @property
-    def rotulo(self): return self._rotulo
+    def rotulo(self):
+        return self._rotulo
+
     @rotulo.setter
     def rotulo(self, valor):
         self._rotulo = valor
@@ -1050,7 +1127,9 @@ class Botao:
         _pedir_redesenho(self._controle)
 
     @property
-    def ativo(self): return self._controle.disabled is not True
+    def ativo(self):
+        return self._controle.disabled is not True
+
     @ativo.setter
     def ativo(self, valor):
         self._controle.disabled = not valor
@@ -1087,8 +1166,9 @@ class Campo:
     ao_confirmar : função chamada ao pressionar Enter (padrão: None)
     """
 
-    def __init__(self, origem, rotulo="", dica="", senha=False,
-                 largura=300, ao_confirmar=None):
+    def __init__(
+        self, origem, rotulo="", dica="", senha=False, largura=300, ao_confirmar=None
+    ):
         self._origem = origem
         self._controle = ft.TextField(
             label=rotulo,
@@ -1102,7 +1182,9 @@ class Campo:
         )
 
     @property
-    def origem(self): return self._origem
+    def origem(self):
+        return self._origem
+
     @origem.setter
     def origem(self, ponto):
         self._origem = ponto
@@ -1167,12 +1249,16 @@ class Imagem:
         # imagem. Quem trata clique na Aroeira é tela.ao_clicar, resolvendo por
         # geometria qual elemento foi atingido; a Imagem não trata nada.
         self._container = ft.Container(
-            left=origem.x, top=origem.y, content=self._controle,
+            left=origem.x,
+            top=origem.y,
+            content=self._controle,
             ignore_interactions=True,
         )
 
     @property
-    def origem(self): return self._origem
+    def origem(self):
+        return self._origem
+
     @origem.setter
     def origem(self, ponto):
         self._origem = ponto
@@ -1181,7 +1267,9 @@ class Imagem:
         _pedir_redesenho(self._container)
 
     @property
-    def caminho(self): return self._caminho
+    def caminho(self):
+        return self._caminho
+
     @caminho.setter
     def caminho(self, valor):
         self._caminho = valor
@@ -1258,19 +1346,20 @@ class CaixaDeDialogo:
         tela.mostrar_dialogo(caixa)
     """
 
-    def __init__(self, titulo="", mensagem="", modo="mensagem", ao_confirmar=None,
-                 valor=""):
+    def __init__(
+        self, titulo="", mensagem="", modo="mensagem", ao_confirmar=None, valor=""
+    ):
         modos_validos = ("mensagem", "confirmacao", "entrada")
         if modo not in modos_validos:
             raise ValueError(f"modo deve ser um de: {modos_validos}")
 
-        self._titulo       = titulo
-        self._mensagem     = mensagem
-        self._modo         = modo
+        self._titulo = titulo
+        self._mensagem = mensagem
+        self._modo = modo
         self._ao_confirmar = ao_confirmar
-        self._valor        = valor
-        self._pagina       = None
-        self._campo_ft     = None
+        self._valor = valor
+        self._pagina = None
+        self._campo_ft = None
 
     def _fechar(self):
         if self._pagina:
@@ -1393,8 +1482,7 @@ class Tela:
         tela.executar()
     """
 
-    def __init__(self, titulo="Aroeira", largura=800, altura=600,
-                 cor_fundo="branco"):
+    def __init__(self, titulo="Aroeira", largura=800, altura=600, cor_fundo="branco"):
         self._titulo = titulo
         self._largura = largura
         self._altura = altura
@@ -1548,7 +1636,6 @@ class Tela:
         self._funcao_animacao = funcao
         self._intervalo_ms = max(1, int(1000 / fps))
         self._segue = True
-    
 
     # ----------------------------------------------------------
     #  Eventos de teclado
@@ -1631,7 +1718,9 @@ class Tela:
         if not isinstance(caixa, CaixaDeDialogo):
             raise TypeError("caixa deve ser um objeto CaixaDeDialogo")
         if not self._paginas:
-            raise RuntimeError("mostrar_dialogo() deve ser chamado após tela.executar()")
+            raise RuntimeError(
+                "mostrar_dialogo() deve ser chamado após tela.executar()"
+            )
         pagina = self._paginas[-1]
         dialogo = caixa._construir(pagina)
         pagina.show_dialog(dialogo)
@@ -1846,7 +1935,7 @@ class Tela:
 
             tela.adicionar(Botao(Ponto(600, 500), "Sair", ao_clicar=sair))
         """
-        self._segue = False        # para a animação, se houver
+        self._segue = False  # para a animação, se houver
         self._fechada = True
 
         if self._web:
@@ -1902,8 +1991,10 @@ class Tela:
         """
         self._tela_cheia = bool(tela_cheia)
         if self._tela_cheia and web:
-            print("[Aroeira] tela_cheia=True não vale no modo web: o "
-                  "navegador só entra em tela cheia pela tecla F11.")
+            print(
+                "[Aroeira] tela_cheia=True não vale no modo web: o "
+                "navegador só entra em tela cheia pela tecla F11."
+            )
         # fechar() antes de executar(): a janela nem chega a abrir. Abrir
         # uma tela já mandada fechar deixaria o aluno com uma janela que
         # não obedece a nada.
@@ -1913,6 +2004,7 @@ class Tela:
         self._web = web
         if self._web:
             import socket  # import tardio: só necessário no modo web
+
             porta = 8550
 
             # Liberar a porta caso um processo anterior ainda esteja rodando
@@ -1924,15 +2016,17 @@ class Tela:
                 # DNS do Google — o SO preenche o endereço de origem com o IP local
                 # da interface que seria usada para alcançar aquele destino.
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("8.8.8.8", 80))   # não envia nada; só força o SO a escolher a interface
-                ip = s.getsockname()[0]       # lê o IP local que o SO preencheu
+                s.connect(
+                    ("8.8.8.8", 80)
+                )  # não envia nada; só força o SO a escolher a interface
+                ip = s.getsockname()[0]  # lê o IP local que o SO preencheu
                 s.close()
             except Exception:
-                ip = "localhost"              # fallback se não houver rede
-            print(f"\n{'='*52}")
+                ip = "localhost"  # fallback se não houver rede
+            print(f"\n{'=' * 52}")
             print(f"  Acesse no celular (mesma rede WiFi):")
             print(f"  http://{ip}:{porta}")
-            print(f"{'='*52}\n")
+            print(f"{'=' * 52}\n")
             # host="0.0.0.0" faz o servidor escutar em todas as interfaces,
             # tornando-o acessível por qualquer dispositivo na mesma rede.
             # O IP descoberto acima foi apenas para exibir a URL no terminal.
@@ -1941,10 +2035,15 @@ class Tela:
             # estiver dentro de assets_dir. Sem isso, pastas como "png/" ficam
             # inacessíveis ao navegador (mesmo funcionando no modo desktop, que
             # lê o disco local diretamente).
-            ft.app(target=self._iniciar, view=ft.AppView.WEB_BROWSER,
-                   host="0.0.0.0", port=porta, assets_dir=".")
+            ft.run(
+                self._iniciar,
+                view=ft.AppView.WEB_BROWSER,
+                host="0.0.0.0",
+                port=porta,
+                assets_dir=".",
+            )
         else:
-            ft.app(target=self._iniciar, assets_dir=".")
+            ft.run(self._iniciar, assets_dir=".")
 
     # ----------------------------------------------------------
     #  Internos — construção da interface Flet
@@ -1958,7 +2057,7 @@ class Tela:
             pagina.window.width = self._largura + 16
             pagina.window.height = self._altura + 39
             pagina.window.resizable = False
-            
+
         pagina.bgcolor = self._cor_fundo
         pagina.padding = 0
 
@@ -1999,12 +2098,16 @@ class Tela:
         # tratador só é registrado se o aluno pediu por ele: um GestureDetector
         # com on_tap_down captura o toque, e não faz sentido interceptá-lo em
         # um programa que só quer acompanhar o mouse.
-        camada_canvas = ft.GestureDetector(
-            content=canvas,
-            on_tap_down=self._tratar_clique if self._funcao_clique else None,
-            on_hover=self._tratar_mover_mouse if self._funcao_mover_mouse else None,
-            hover_interval=self._intervalo_mouse_ms,
-        ) if (self._funcao_clique or self._funcao_mover_mouse) else canvas
+        camada_canvas = (
+            ft.GestureDetector(
+                content=canvas,
+                on_tap_down=self._tratar_clique if self._funcao_clique else None,
+                on_hover=self._tratar_mover_mouse if self._funcao_mover_mouse else None,
+                hover_interval=self._intervalo_mouse_ms,
+            )
+            if (self._funcao_clique or self._funcao_mover_mouse)
+            else canvas
+        )
 
         pilha = ft.Stack(
             controls=[camada_canvas] + controles_ui,
@@ -2022,12 +2125,14 @@ class Tela:
             # com o foco de teclado. Se o aluno clicar num Campo de texto, o
             # foco muda; basta clicar de volta na área do jogo para as teclas
             # voltarem a funcionar.
-            pagina.add(ft.KeyboardListener(
-                content=pilha,
-                autofocus=True,
-                on_key_down=self._tratar_teclado,
-                on_key_up=self._tratar_soltar_tecla,
-            ))
+            pagina.add(
+                ft.KeyboardListener(
+                    content=pilha,
+                    autofocus=True,
+                    on_key_down=self._tratar_teclado,
+                    on_key_up=self._tratar_soltar_tecla,
+                )
+            )
         else:
             pagina.add(pilha)
         pagina.update()
@@ -2115,7 +2220,7 @@ class Tela:
                 (Ponto(int(e.local_position.x), int(e.local_position.y)),),
                 titulo="Houve um erro na sua função de clique.",
                 consequencia="O programa continua rodando. Este mesmo erro não será\n"
-                             "mostrado de novo até você executar o programa outra vez.",
+                "mostrado de novo até você executar o programa outra vez.",
             )
 
     def _tratar_mover_mouse(self, e: ft.HoverEvent):
@@ -2125,7 +2230,7 @@ class Tela:
                 (Ponto(int(e.local_position.x), int(e.local_position.y)),),
                 titulo="Houve um erro na sua função de movimento do mouse.",
                 consequencia="O programa continua rodando. Este mesmo erro não será\n"
-                             "mostrado de novo até você executar o programa outra vez.",
+                "mostrado de novo até você executar o programa outra vez.",
             )
 
     # Sem anotação de tipo de propósito: recebe tanto ft.KeyboardEvent
@@ -2139,7 +2244,7 @@ class Tela:
                 (e.key,),
                 titulo="Houve um erro na sua função de teclado.",
                 consequencia="O programa continua rodando. Este mesmo erro não será\n"
-                             "mostrado de novo até você executar o programa outra vez.",
+                "mostrado de novo até você executar o programa outra vez.",
             )
 
     def _tratar_soltar_tecla(self, e: ft.KeyUpEvent):
@@ -2149,7 +2254,7 @@ class Tela:
                 (e.key,),
                 titulo="Houve um erro na sua função de soltar tecla.",
                 consequencia="O programa continua rodando. Este mesmo erro não será\n"
-                             "mostrado de novo até você executar o programa outra vez.",
+                "mostrado de novo até você executar o programa outra vez.",
             )
 
     async def _loop_animacao(self):
@@ -2177,7 +2282,7 @@ class Tela:
                     self._funcao_animacao,
                     titulo="A animação parou por causa de um erro no seu programa.",
                     consequencia="A janela continua aberta e o resto do programa segue\n"
-                                 "funcionando. Corrija o erro e execute de novo.",
+                    "funcionando. Corrija o erro e execute de novo.",
                 )
             finally:
                 self._em_lote = False
@@ -2215,8 +2320,9 @@ class Tela:
 # ------------------------------------------------------------
 try:
     import aroeira_registro as _registro
+
     _registro.ligar(observar_erros)
 except ImportError:
-    pass       # sem o arquivo, nada é registrado — comportamento normal
+    pass  # sem o arquivo, nada é registrado — comportamento normal
 except Exception:
-    pass       # registro com defeito jamais impede o programa de rodar
+    pass  # registro com defeito jamais impede o programa de rodar
