@@ -39,7 +39,7 @@ def soltar(nome):
 
 
 def atualizar():
-    colisao.processar_extras(player, tela, texto_vidas)
+    colisao.processar_extras(player, inimigo, tela, texto_vidas)
 
     if "w" in teclas:
         player.mover_e_resolver(0, -config.VELOCIDADE, mapa.solidos)
@@ -51,8 +51,12 @@ def atualizar():
         player.mover_e_resolver(config.VELOCIDADE, 0, mapa.solidos)
 
 
+    if inimigo.health == 0:
+        tela.remover(inimigo.shape)
+
     inimigo.mover_e_resolver(mapa.solidos)
     # mover_inimigo()
+    inimigo.tick_invenc()
     player.tick_invenc()
 
 
