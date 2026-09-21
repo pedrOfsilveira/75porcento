@@ -61,10 +61,9 @@ def atualizar():
     if inimigo.health == 0:
         tela.remover(inimigo.shape)
 
-    tiros.atualizar(mapa.solidos, inimigo)
+    tiros.atualizar(mapa.solidos, inimigo, teclas)
     inimigo.mover_e_resolver(mapa.solidos)
     # mover_inimigo()
-    inimigo.tick_invenc()
     player.tick_invenc()
 
 

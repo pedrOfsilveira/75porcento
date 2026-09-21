@@ -12,6 +12,7 @@ FPS = 60
 
 TAMANHO_TIRO = 15
 VELOCIDADE_TIRO = 8
+INTERVALO_ENTRE_TIROS = 15  # 0,25s em 60 fps
 
 VIDAS_INICIAIS = 3
 INVENC_FRAMES = 30  # isso aqui da 0,5s de invenc com 60fps, da p mudar

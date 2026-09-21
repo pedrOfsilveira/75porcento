@@ -20,17 +20,10 @@ class Inimigo:
         self._desvio_x = 0
 
         self.health = config.VIDAS_INICIAIS
-        self.invenc = 0
 
 
     def dano(self):
-        if self.invenc == 0:
-           self.health -= 1
-           self.invenc = config.INVENC_FRAMES
-
-    def tick_invenc(self):
-        if self.invenc > 0:
-           self.invenc -= 1
+        self.health -= 1
 
     def mover_inimigo(self):
         dx = self.player.shape.x - self.shape.x

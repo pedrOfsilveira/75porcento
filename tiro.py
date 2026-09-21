@@ -39,18 +39,22 @@ class Tiros:
 
     def __init__(self, tela, player):
         self.DIRECOES = {
-            "Arrow Up": (0, -config.VELOCIDADE_TIRO),
-            "Arrow Down": (0, config.VELOCIDADE_TIRO),
-            "Arrow Left": (-config.VELOCIDADE_TIRO, 0),
-            "Arrow Right": (config.VELOCIDADE_TIRO, 0),
+            "arrow up": (0, -config.VELOCIDADE_TIRO),
+            "arrow down": (0, config.VELOCIDADE_TIRO),
+            "arrow left": (-config.VELOCIDADE_TIRO, 0),
+            "arrow right": (config.VELOCIDADE_TIRO, 0),
         }
 
         self.tela = tela
         self.player = player
         self.ativos: list[Tiro] = []
+        self.tempo_ate_atirar = 0
 
     def atirar(self, tecla):
-        direcao = self.DIRECOES.get(tecla)
+        if self.tempo_ate_atirar > 0:
+            return
+
+        direcao = self.DIRECOES.get(tecla.casefold())
         if direcao is None:
             return
 
@@ -60,8 +64,18 @@ class Tiros:
         tiro = Tiro(ponto, dx=direcao[0], dy=direcao[1])
         self.ativos.append(tiro)
         self.tela.adicionar(tiro.shape)
+        self.tempo_ate_atirar = config.INTERVALO_ENTRE_TIROS
 
-    def atualizar(self, solidos, inimigo):
+    def atualizar(self, solidos, inimigo, teclas):
+        if self.tempo_ate_atirar > 0:
+            self.tempo_ate_atirar -= 1
+
+        if self.tempo_ate_atirar == 0:
+            for tecla in self.DIRECOES:
+                if tecla in teclas:
+                    self.atirar(tecla)
+                    break
+
         for tiro in self.ativos.copy():
             tiro.mover()
 
