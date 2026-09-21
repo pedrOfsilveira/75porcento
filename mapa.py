@@ -8,6 +8,7 @@ from tile import Tile
 # ESTADO DA SALA ATUAL (troquei pixel por tile e renderizado por solido)
 solidos: list[Tile] = []  # qualquer coisa com colisao
 extras: list[Tile] = []  # sem colisao
+finalizadas: list[bool]
 salas: dict = {}
 colunas = 0
 linhas = 0
@@ -42,6 +43,12 @@ def desenhar_sala(matriz, tela):
             tela.adicionar(tile.shape)
 
     salas[chave_sala()] = (solidos, extras)
+
+
+def desenhar_inimigos():
+    # essa função tem que desenhar os inimigos
+    # se a sala ainda n tiver sido finalizada
+    return
 
 
 def sala_aleatoria(tela):
@@ -98,3 +105,7 @@ def direcao_da_porta(tile: Tile) -> str | None:
     if tile.shape.x >= config.LARGURA_TELA - config.TILE:
         return "direita"
     return None
+
+
+def finalizar_sala(sala):
+    return
