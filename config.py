@@ -10,6 +10,9 @@ ALTURA_TELA = LINHAS_SALA * TILE
 VELOCIDADE = 5
 FPS = 60
 
+TAMANHO_TIRO = 15
+VELOCIDADE_TIRO = 8
+
 VIDAS_INICIAIS = 3
 INVENC_FRAMES = 30  # isso aqui da 0,5s de invenc com 60fps, da p mudar
 

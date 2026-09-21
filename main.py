@@ -4,12 +4,14 @@ import config
 import mapa
 from inimigo import Inimigo
 from player import Player
+from tiro import Tiros
 
 tela = ar.Tela("Roguelike", config.LARGURA_TELA, config.ALTURA_TELA)
 mapa.sala_aleatoria(tela)
 
 player = Player()
 inimigo = Inimigo(player)
+tiros = Tiros(tela, player)
 
 texto_vidas = ar.Texto(
     ar.Ponto(config.TILE, config.TILE),
@@ -27,6 +29,8 @@ teclas = set()
 def pressionar(nome):
     teclas.add(nome.casefold())
 
+    tiros.atirar(nome)
+
     if nome == "F":
         print(f"Localização: {mapa.colunas},{mapa.linhas}")
         # print(mapa.extras)
@@ -37,9 +41,12 @@ def pressionar(nome):
 def soltar(nome):
     teclas.discard(nome.casefold())
 
-
 def atualizar():
+    sala_atual = mapa.chave_sala()
     colisao.processar_extras(player, inimigo, tela, texto_vidas)
+
+    if mapa.chave_sala() != sala_atual:
+        tiros.limpar()
 
     if "w" in teclas:
         player.mover_e_resolver(0, -config.VELOCIDADE, mapa.solidos)
@@ -54,6 +61,7 @@ def atualizar():
     if inimigo.health == 0:
         tela.remover(inimigo.shape)
 
+    tiros.atualizar(mapa.solidos, inimigo)
     inimigo.mover_e_resolver(mapa.solidos)
     # mover_inimigo()
     inimigo.tick_invenc()
