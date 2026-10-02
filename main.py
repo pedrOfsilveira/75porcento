@@ -7,10 +7,10 @@ from player import Player
 from tiro import Tiros
 
 tela = ar.Tela("Roguelike", config.LARGURA_TELA, config.ALTURA_TELA)
-mapa.sala_aleatoria(tela)
-
 player = Player()
-inimigo = Inimigo(player)
+finalizada = False
+mapa.sala_aleatoria(tela, player)
+
 tiros = Tiros(tela, player)
 
 texto_vidas = ar.Texto(
@@ -21,7 +21,6 @@ texto_vidas = ar.Texto(
 )
 tela.adicionar(texto_vidas)
 tela.adicionar(player.shape)
-tela.adicionar(inimigo.shape)
 
 teclas = set()
 
@@ -33,17 +32,17 @@ def pressionar(nome):
 
     if nome == "F":
         print(f"Localização: {mapa.colunas},{mapa.linhas}")
-        # print(mapa.extras)
         player.dano(texto_vidas)
-        print(mapa.salas)
-
+        print(finalizada)
+    
 
 def soltar(nome):
     teclas.discard(nome.casefold())
 
 def atualizar():
+    global finalizada
     sala_atual = mapa.chave_sala()
-    colisao.processar_extras(player, inimigo, tela, texto_vidas)
+    colisao.processar_extras(player, tela, texto_vidas)
 
     if mapa.chave_sala() != sala_atual:
         tiros.limpar()
@@ -57,14 +56,31 @@ def atualizar():
     if "d" in teclas:
         player.mover_e_resolver(config.VELOCIDADE, 0, mapa.solidos)
 
+    tiros.atualizar(mapa.solidos, teclas)
 
-    if inimigo.health == 0:
-        tela.remover(inimigo.shape)
+    if len(mapa.lista_inimigos) >= 1:
+        finalizada = False
+        for inimigo in mapa.lista_inimigos:
+            if inimigo.health == 0:
+                tela.remover(inimigo.shape)
+                mapa.lista_inimigos.remove(inimigo)
 
-    tiros.atualizar(mapa.solidos, inimigo, teclas)
-    inimigo.mover_e_resolver(mapa.solidos)
-    # mover_inimigo()
-    player.tick_invenc()
+            inimigo.mover_e_resolver(mapa.solidos)
+            tiros.atualizar_com_inimigo(inimigo)
+            player.tick_invenc()
+
+    if len(mapa.lista_inimigos) == 0 and finalizada == False:
+        if finalizada == False:
+            for bloquinho in mapa.solidos.copy():
+                if bloquinho.tipo == config.PORTA_FECHADA:
+                    mapa.solidos.remove(bloquinho)
+                    bloquinho.tipo = config.PORTA
+                    bloquinho.shape.cor = "verde"
+                    mapa.extras.append(bloquinho)
+            finalizada = True
+
+
+
 
 
 tela.ao_pressionar_tecla(pressionar)

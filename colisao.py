@@ -6,17 +6,14 @@ import mapa
 trocando_sala = False
 
 
-def processar_extras(player, inimigo, tela, texto_vidas):
+def processar_extras(player, tela, texto_vidas):
     global trocando_sala
 
     tocando_porta = False
 
     for tile in mapa.extras:
-        if not player.tocando(tile) and not inimigo.tocando(tile):
+        if not player.tocando(tile):
             continue
-
-        if inimigo.tocando(tile) and tile.tipo == config.ESPINHO:
-            inimigo.dano()
 
         if player.tocando(tile) and tile.tipo == config.ESPINHO:
             player.dano(texto_vidas)
@@ -45,3 +42,13 @@ def processar_extras(player, inimigo, tela, texto_vidas):
 
     if not tocando_porta:
         trocando_sala = False
+
+def processar_extras_inimigo(inimigo, texto_vidas):
+    global trocando_sala
+
+    for tile in mapa.extras:
+        if not inimigo.tocando(tile):
+            continue
+
+        if inimigo.tocando(tile) and tile.tipo == config.ESPINHO:
+            inimigo.dano(texto_vidas)

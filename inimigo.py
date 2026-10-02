@@ -5,11 +5,10 @@ import config
 from player import Player
 from tile import Tile
 
-
 class Inimigo:
-    def __init__(self, player: Player):
+    def __init__(self, player: Player, coordX, coordY):
         self.shape = ar.Retangulo(
-            origem=ar.Ponto(x=2 * config.TILE, y=2 * config.TILE + 25),
+            origem=ar.Ponto(coordX, coordY),
             largura=25,
             altura=25,
             cor="vermelho",
@@ -28,6 +27,7 @@ class Inimigo:
     def mover_inimigo(self):
         dx = self.player.shape.x - self.shape.x
         dy = self.player.shape.y - self.shape.y
+
         d = math.sqrt(dx**2 + dy**2)
 
         if d > 0:

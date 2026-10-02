@@ -2,10 +2,14 @@ import random as rd
 
 import aroeira as ar
 import config
+from inimigo import Inimigo
 from salas import ROOM_LAYOUTS
 from tile import Tile
+from player import Player
+
 
 # ESTADO DA SALA ATUAL (troquei pixel por tile e renderizado por solido)
+lista_inimigos: list[Inimigo] = []
 solidos: list[Tile] = []  # qualquer coisa com colisao
 extras: list[Tile] = []  # sem colisao
 finalizadas: list[bool]
@@ -18,7 +22,7 @@ def chave_sala():
     return f"{colunas},{linhas}"
 
 
-def desenhar_sala(matriz, tela):
+def desenhar_sala(matriz, tela, player):
     global solidos, extras
     solidos = []
     extras = []
@@ -28,32 +32,31 @@ def desenhar_sala(matriz, tela):
             if tipo == config.CHAO:
                 continue
 
+            if tipo == config.INIMIGO:
+                inimigo = Inimigo(player, col * config.TILE, linha_i * config.TILE)
+                tela.adicionar(inimigo.shape)
+                lista_inimigos.append(inimigo)
+                continue
+
             tile = Tile(
                 origem=ar.Ponto(col * config.TILE, linha_i * config.TILE),
                 cor=config.CORES[tipo],
                 colisao=config.TEM_COLISAO[tipo],
                 tipo=tipo,
             )
-
             if tile.colisao:
                 solidos.append(tile)
             else:
                 extras.append(tile)
 
             tela.adicionar(tile.shape)
-
     salas[chave_sala()] = (solidos, extras)
 
 
-def desenhar_inimigos():
-    # essa função tem que desenhar os inimigos
-    # se a sala ainda n tiver sido finalizada
-    return
 
-
-def sala_aleatoria(tela):
+def sala_aleatoria(tela, player):
     indice = rd.randint(0, len(ROOM_LAYOUTS) - 1)
-    desenhar_sala(ROOM_LAYOUTS[indice], tela)
+    desenhar_sala(ROOM_LAYOUTS[indice], tela, player)
 
 
 def remover_mapa(tela, player):
@@ -90,7 +93,7 @@ def trocar_sala(direcao, tela, player):
         solidos, extras = salas[chave]
         _mostrar_sala_atual(tela)
     else:
-        sala_aleatoria(tela)
+        sala_aleatoria(tela, player)
 
     tela.adicionar(player.shape)
 

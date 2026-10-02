@@ -8,10 +8,10 @@ LARGURA_TELA = COLUNAS_SALA * TILE
 ALTURA_TELA = LINHAS_SALA * TILE
 
 VELOCIDADE = 5
-FPS = 60
+FPS = 120
 
 TAMANHO_TIRO = 15
-VELOCIDADE_TIRO = 8
+VELOCIDADE_TIRO = 4
 INTERVALO_ENTRE_TIROS = 15  # 0,25s em 60 fps
 
 VIDAS_INICIAIS = 3
@@ -23,14 +23,16 @@ PAREDE = 1
 OBSTACULO = 2
 ESPINHO = 3
 PORTA = 4
-ESPECIAL = 5
+INIMIGO = 5
+PORTA_FECHADA = 6
 
 CORES = {
     PAREDE: "marrom",
     OBSTACULO: "vermelho",
     ESPINHO: "cinza",
     PORTA: "verde",
-    ESPECIAL: "azul",
+    PORTA_FECHADA: "vermelho",
+    INIMIGO: "transparente",
 }
 
 TEM_COLISAO = {
@@ -38,7 +40,8 @@ TEM_COLISAO = {
     OBSTACULO: True,
     ESPINHO: False,
     PORTA: False,
-    ESPECIAL: False,
+    PORTA_FECHADA: True,
+    INIMIGO: False,
 }
 
 # isso aqui sao as coords de onde o player spawna quando sai de cada porta

@@ -66,7 +66,7 @@ class Tiros:
         self.tela.adicionar(tiro.shape)
         self.tempo_ate_atirar = config.INTERVALO_ENTRE_TIROS
 
-    def atualizar(self, solidos, inimigo, teclas):
+    def atualizar(self, solidos, teclas):
         if self.tempo_ate_atirar > 0:
             self.tempo_ate_atirar -= 1
 
@@ -80,12 +80,21 @@ class Tiros:
             tiro.mover()
 
             acertou_solido = any(tiro.tocando(bloco) for bloco in solidos)
-            acertou_inimigo = inimigo.health > 0 and tiro.tocando(inimigo)
 
-            if tiro.fora_da_tela() or acertou_solido or acertou_inimigo:
-                if acertou_inimigo:
-                    inimigo.dano()
+            if tiro.fora_da_tela() or acertou_solido:
+                
                 self.remover(tiro)
+
+    def atualizar_com_inimigo(self, inimigo):
+    
+            for tiro in self.ativos.copy():
+
+                acertou_inimigo = inimigo.health > 0 and tiro.tocando(inimigo)
+    
+                if acertou_inimigo:
+                    if acertou_inimigo:
+                        inimigo.dano()
+                    self.remover(tiro)
 
     def remover(self, tiro):
         if tiro in self.ativos:
