@@ -2,6 +2,7 @@
 # 0 = chão, 1 = parede, 2 = obstáculo, 3 = espinho, 4 = porta (POR ENQUANTO)
 # (da p ver config.py para os nomes)
 
+#UTILIZANDO ASSIM PRA TESTAR EM UMA SALA SÓ
 ROOM_LAYOUTS = [
     [
         [1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1],

@@ -70,13 +70,18 @@ def atualizar():
             player.tick_invenc()
 
     if len(mapa.lista_inimigos) == 0 and finalizada == False:
+
         if finalizada == False:
+
             for bloquinho in mapa.solidos.copy():
+                
                 if bloquinho.tipo == config.PORTA_FECHADA:
-                    mapa.solidos.remove(bloquinho)
                     bloquinho.tipo = config.PORTA
-                    bloquinho.shape.cor = "verde"
+                    bloquinho.colisao = config.TEM_COLISAO[bloquinho.tipo]
+                    bloquinho.shape.cor = config.CORES[bloquinho.tipo]
+                    mapa.solidos.remove(bloquinho)
                     mapa.extras.append(bloquinho)
+
             finalizada = True
 
 
