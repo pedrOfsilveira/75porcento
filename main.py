@@ -2,13 +2,14 @@ import aroeira as ar
 import colisao
 import config
 import mapa
-from inimigo import Inimigo
 from player import Player
 from tiro import Tiros
 
 tela = ar.Tela("Roguelike", config.LARGURA_TELA, config.ALTURA_TELA)
 player = Player()
 finalizada = False
+mapa.mapa_aleatorio()
+coordBoss = mapa.sala_boss()
 mapa.sala_aleatoria(tela, player)
 
 tiros = Tiros(tela, player)
@@ -31,9 +32,9 @@ def pressionar(nome):
     tiros.atirar(nome)
 
     if nome == "F":
-        print(f"Localização: {mapa.colunas},{mapa.linhas}")
+        print(f"Localização: {mapa.linhas},{mapa.colunas}")
         player.dano(texto_vidas)
-        print(finalizada)
+        print(f"coordenada do boss: {coordBoss}")
     
 
 def soltar(nome):
@@ -41,8 +42,9 @@ def soltar(nome):
 
 def atualizar():
     global finalizada
+    finalizada = False
     sala_atual = mapa.chave_sala()
-    colisao.processar_extras(player, tela, texto_vidas)
+    colisao.processar_extras(player, tela, texto_vidas, coordBoss)
 
     if mapa.chave_sala() != sala_atual:
         tiros.limpar()
@@ -60,7 +62,7 @@ def atualizar():
 
     if len(mapa.lista_inimigos) >= 1:
         finalizada = False
-        for inimigo in mapa.lista_inimigos:
+        for inimigo in mapa.lista_inimigos.copy():
             if inimigo.health == 0:
                 tela.remover(inimigo.shape)
                 mapa.lista_inimigos.remove(inimigo)
@@ -81,10 +83,14 @@ def atualizar():
                     bloquinho.shape.cor = config.CORES[bloquinho.tipo]
                     mapa.solidos.remove(bloquinho)
                     mapa.extras.append(bloquinho)
-
-            finalizada = True
-
-
+                    
+                elif bloquinho.tipo == config.PORTA_BOSS_FECHADA:
+                    bloquinho.tipo = config.PORTA
+                    bloquinho.colisao = config.TEM_COLISAO[bloquinho.tipo]
+                    bloquinho.shape.cor = "laranja"
+                    mapa.solidos.remove(bloquinho)
+                    mapa.extras.append(bloquinho)
+            
 
 
 

@@ -25,6 +25,7 @@ ESPINHO = 3
 PORTA = 4
 INIMIGO = 5
 PORTA_FECHADA = 6
+PORTA_BOSS_FECHADA = 7
 
 CORES = {
     PAREDE: "marrom",
@@ -32,6 +33,7 @@ CORES = {
     ESPINHO: "cinza",
     PORTA: "verde",
     PORTA_FECHADA: "vermelho",
+    PORTA_BOSS_FECHADA: "laranja",
     INIMIGO: "transparente",
 }
 
@@ -41,6 +43,7 @@ TEM_COLISAO = {
     ESPINHO: False,
     PORTA: False,
     PORTA_FECHADA: True,
+    PORTA_BOSS_FECHADA: True,
     INIMIGO: False,
 }
 

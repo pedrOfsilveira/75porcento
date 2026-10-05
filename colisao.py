@@ -6,7 +6,7 @@ import mapa
 trocando_sala = False
 
 
-def processar_extras(player, tela, texto_vidas):
+def processar_extras(player, tela, texto_vidas, bossCoordenada):
     global trocando_sala
 
     tocando_porta = False
@@ -30,7 +30,7 @@ def processar_extras(player, tela, texto_vidas):
                 continue
 
             trocando_sala = True
-            mapa.trocar_sala(direcao, tela, player)
+            mapa.trocar_sala(direcao, tela, player, bossCoordenada)
 
             novo_x, novo_y = config.SPAWN_APOS_PORTA[direcao]
             if novo_x is not None:
